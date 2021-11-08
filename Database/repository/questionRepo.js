@@ -25,11 +25,23 @@ export default function questionRepository() {
     });
     return newQuestion.save();
   };
+  const updateById = (id, QuestionDomain) => {
+    const updatedQuestion = {
+      question: QuestionDomain.question,
+      answers: QuestionDomain.answers,
+    };
 
+    return QuestionModel.findOneAndUpdate(
+      { _id: id },
+      { $set: updatedQuestion },
+      { new: true }
+    );
+  };
   return {
     findByProperty,
     countAll,
     findById,
     add,
+    updateById
   };
 }

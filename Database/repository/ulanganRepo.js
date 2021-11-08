@@ -18,8 +18,6 @@ export default function ulanganRepository() {
 
   const findById = (id) => UlanganModel.findById(id);
 
-  const findUserById = (id) => HistoryModel.findById(id);
-
   const add = async (ulangan) => {
     const ulanganNew = await UlanganModel.create({
       title: ulangan.title,
@@ -30,11 +28,25 @@ export default function ulanganRepository() {
     return ulanganNew;
   };
 
+  const updateById = (id, ulanganDomain) => {
+    const updatedUlangan = {
+      title: ulanganDomain.title,
+      topic:ulanganDomain.topic,
+      question:ulanganDomain.question,
+    };
+
+    return ulanganModel.findOneAndUpdate(
+      { _id: id },
+      { $set: updatedUlangan },
+      { new: true }
+    );
+  };
+
   return {
     findByProperty,
     countAll,
     findById,
     add,
-    findUserById,
+    updateById
   };
 }

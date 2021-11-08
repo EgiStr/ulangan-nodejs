@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import validator from "validator";
 
-const model = mongoose.model
-const Schema = mongoose.Schema
+const model = mongoose.model;
+const Schema = mongoose.Schema;
 
 const UserSchema = new Schema(
   {
@@ -13,6 +13,7 @@ const UserSchema = new Schema(
     email: {
       type: String,
       unique: [true, "Email has been Taked"],
+      index: true,
       validate: [validator.isEmail, "Email Not correct!"],
     },
     password: {
@@ -28,4 +29,6 @@ const UserSchema = new Schema(
   { timestamps: true }
 );
 
-export default model("User", UserSchema);
+const UserModel = model("User", UserSchema);
+UserModel.createIndexes();
+export default UserModel;

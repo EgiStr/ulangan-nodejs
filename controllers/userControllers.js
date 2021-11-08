@@ -35,17 +35,82 @@ class UserControllers {
   };
 
   fetchUserById = (req, res, next) => {
-    findById(req.params.id, dbRepository)
+    this.repository
+      .findById(req.params.id)
       .then((user) => res.json(user))
       .catch((error) => next(error));
   };
 
+  dashboardUser = async (req, res, next) => {
+    const userId = req.user;
+    console.log(userId)
+    try {
+      const user = await this.repository.findById(userId.id);
+      res.status(200).json(user);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateUser = async (req, res, next) => {
+    const userId = req.user.id;
+    const { username } = req.body;
+    console.log(username)
+    try {
+      const newUser = await this.repository.updateUser(userId, username);
+      res.status(200).json(newUser);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  deleteUser = async (req, res, next) => {
+    const user = req.user;
+    try {
+      await this.repository.deleteUser(user.id);
+      res
+        .status(203)
+        .json({ message: `User ${user.username} has been deleted` });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   signin = (req, res, next) => {
-    const { username, password, email, role, createdAt } = req.body;
+    const { username, password, password2, email, role } = req.body;
     this.repository
-      .signin(username, password, email, role)
+      .signin(username, password, password2, email, role)
       .then((user) => res.json(user))
       .catch((error) => next(error));
+  };
+
+  login = async (req, res, next) => {
+    try {
+      const { email, password } = req.body;
+      const { access, refresh } = await this.repository.login(email, password);
+      res.cookie("X-accessToken", access, {
+        maxAge: new Date() * 60 * 60 * 24,
+        httpOnly: true,
+      });
+      res
+        .json({
+          message: "success login",
+          access,
+          refresh,
+        })
+        .status(200);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  logout = (req, res, next) => {
+    if (req.cookies["X-accessToken"]) {
+      res.cookie("X-accessToken", "", { maxAge: new Date(0) });
+      res.status(201).json({ message: "success logout" });
+    } else {
+      next();
+    }
   };
 }
 export default UserControllers;

@@ -16,7 +16,11 @@ export default function authService() {
 
   const generateToken = (payload) =>
     jwt.sign(payload, config.jwtSecret, {
-      expiresIn: 360000,
+      expiresIn: new Date() * 60 * 60 * 24,
+    });
+  const generateRefresh = (payload) =>
+    jwt.sign(payload, config.refreshSecret, {
+      expiresIn: new Date() * 60 * 60 * 24,
     });
 
   return {
@@ -24,5 +28,6 @@ export default function authService() {
     compare,
     verify,
     generateToken,
+    generateRefresh
   };
 }

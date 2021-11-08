@@ -1,10 +1,13 @@
 import express from "express";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 export default function (app) {
   app.use(express.json({ limit: "15mb" }));
+
   app.use(
     express.urlencoded({ limit: "15mb", extended: true, parameterLimit: 50000 })
   );
+  app.use(cookieParser());
   app.use((req, res, next) => {
     // Website you wish to allow to connect
     res.setHeader("Access-Control-Allow-Origin", "*");

@@ -1,8 +1,15 @@
-export default function (username, email, password, role = "siswa") {
+export default function (
+  username,
+  email,
+  password,
+  password2,
+  role = "siswa"
+) {
   return {
     username,
     email,
     password,
+    password2,
     role,
   };
 }

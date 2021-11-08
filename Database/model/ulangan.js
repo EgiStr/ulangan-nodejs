@@ -26,4 +26,5 @@ const UlanganSchema = new Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Ulangan", UlanganSchema);
+
+export default model("Ulangan", UlanganSchema);
