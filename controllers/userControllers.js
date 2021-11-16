@@ -64,10 +64,10 @@ class UserControllers {
     // predefined query params (apart from dynamically) for pagination
     params.page = params.page ? parseInt(params.page, 10) : 1;
     params.perPage = params.perPage ? parseInt(params.perPage, 10) : 10;
-    
+
     try {
-      const history = await this.repository.historyUser(userId.id,params);
-      
+      const history = await this.repository.historyUser(userId.id, params);
+
       res.status(200).json(history);
     } catch (error) {
       next(error);
@@ -77,7 +77,6 @@ class UserControllers {
   updateUser = async (req, res, next) => {
     const userId = req.user.id;
     const { username } = req.body;
-    console.log(username)
     try {
       const newUser = await this.repository.updateUser(userId, username);
       res.status(200).json(newUser);
@@ -90,9 +89,7 @@ class UserControllers {
     const user = req.user;
     try {
       await this.repository.deleteUser(user.id);
-      res
-        .status(203)
-        .json({ message: `User ${user.username} has been deleted` });
+      res.status(203);
     } catch (error) {
       next(error);
     }

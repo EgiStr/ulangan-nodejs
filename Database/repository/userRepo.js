@@ -1,5 +1,6 @@
 import UserModel from "../model/user.js";
 import HistoryModel from "../model/history.js";
+import errorStatus from "../../helpers/errorStatus.js";
 
 // move it to a proper place
 function omit(obj, ...props) {
@@ -9,6 +10,7 @@ function omit(obj, ...props) {
 }
 
 export default function userRepository() {
+  
   const findByProperty = (params) =>
     UserModel.find(omit(params, "page", "perPage"))
       .select("-password -__v -role -createdAt -updatedAt")
@@ -32,15 +34,23 @@ export default function userRepository() {
       .skip(params.perPage * params.page - params.perPage)
       .limit(params.perPage);
 
-  const add = (user) => {
-    const newUser = new UserModel({
-      username: user.username,
-      password: user.password,
-      email: user.email,
-      role: user.role,
-    });
+  const add = async (user) => {
+    try {
+      const { username, email, role } = await UserModel.create({
+        username: user.username,
+        password: user.password,
+        email: user.email,
+        role: user.role,
+      });
 
-    return newUser.save();
+      return { username, email };
+    } catch (error) {
+      if (error && error.code === 11000) {
+        throw errorStatus(`users already exists`, 400);
+      } else {
+        throw error;
+      }
+    }
   };
 
   const updateById = (id, userDomain) => {

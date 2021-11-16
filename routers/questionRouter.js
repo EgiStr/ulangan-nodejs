@@ -5,7 +5,7 @@ import authMiddleware from "../middlewares/auth/authMiddleware.js";
 export default function ulanganRouter() {
   const router = express.Router();
   const controllers = new QuestionControllers();
-  router.get("/", controllers.fetchUsersByProperty);
+  
   router.post("/", [authMiddleware], controllers.addQuestion);
 
   router.put("/:id", [authMiddleware], controllers.updateQuestion);

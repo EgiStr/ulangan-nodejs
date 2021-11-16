@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import { QuestionSchema } from "./question.js";
-import { TopicSchema } from "./topic.js";
 
 const model = mongoose.model;
 const Schema = mongoose.Schema;
@@ -10,15 +9,17 @@ const UlanganSchema = new Schema(
     title: {
       type: String,
       required: true,
+      index: true,
     },
     owner: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
-    topic: [TopicSchema],
+    topic: [{ type: String, index: true }],
     question: [QuestionSchema],
   },
   { timestamps: true }
 );
-
-export default model("Ulangan", UlanganSchema);
+const UlanganModel = model("Ulangan", UlanganSchema);
+UlanganModel.createIndexes();
+export default UlanganModel;

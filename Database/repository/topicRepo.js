@@ -1,4 +1,4 @@
-import TopicModel from "../model/topic.js";
+import UlanganModel from "../model/ulangan.js";
 // move it to a proper place
 
 function omit(obj, ...props) {
@@ -9,19 +9,19 @@ function omit(obj, ...props) {
 
 export default function TopicRepository() {
   const findByProperty = (params) =>
-    TopicModel.find(omit(params, "page", "perPage"))
+    UlanganModel.find(omit(params, "page", "perPage"))
       .skip(params.perPage * params.page - params.perPage)
       .limit(params.perPage);
   const countAll = (params) =>
-    TopicModel.countDocuments(omit(params, "page", "perPage"));
+    UlanganModel.countDocuments(omit(params, "page", "perPage"));
 
-  const findById = (id) => TopicModel.findById(id);
+  const findById = (id) => UlanganModel.findById(id);
 
   const getOrAdd = async (content) => {
     try {
       const data = { content };
 
-      const topic = await TopicModel.findOneAndUpdate(
+      const topic = await UlanganModel.findOneAndUpdate(
         data, // find a document with that filter
         data, // document to insert when nothing was found
         { upsert: true, new: true, runValidators: true }

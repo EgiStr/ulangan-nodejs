@@ -1,4 +1,3 @@
-import QuestionModel from "../model/question.js";
 import UlanganModel from "../model/ulangan.js";
 // move it to a proper place
 function omit(obj, ...props) {
@@ -9,17 +8,17 @@ function omit(obj, ...props) {
 
 export default function questionRepository() {
   const findByProperty = (params) =>
-    QuestionModel.find(omit(params, "page", "perPage"))
+    UlanganModel.find(omit(params, "page", "perPage"))
       .skip(params.perPage * params.page - params.perPage)
       .limit(params.perPage);
 
   const countAll = (params) =>
-    QuestionModel.countDocuments(omit(params, "page", "perPage"));
+    UlanganModel.countDocuments(omit(params, "page", "perPage"));
 
-  const findById = (id) => QuestionModel.findById(id);
+  const findById = (id) => UlanganModel.findById(id);
 
   const add = (qt) => {
-    const newQuestion = new QuestionModel({
+    const newQuestion = new UlanganModel({
       question: qt.question,
       answers: qt.answer,
     });
@@ -27,7 +26,7 @@ export default function questionRepository() {
   };
 
   const addAndUpdateUlangan = async (id_ulangan, qt) => {
-    const newQuestion = await QuestionModel.create({
+    const newQuestion = await UlanganModel.create({
       question: qt.quesiton,
       answers: qt.answer,
     }).catch((err) => {
@@ -50,7 +49,7 @@ export default function questionRepository() {
 
   const addBulk = async (question) => {
     try {
-      const newQuestion = await QuestionModel.insertMany(question);
+      const newQuestion = await UlanganModel.insertMany(question);
       return newQuestion.map((item) => item._id);
     } catch (error) {
       const newError = new Error(error);
@@ -64,7 +63,7 @@ export default function questionRepository() {
       answers: QuestionDomain.answers,
     };
 
-    return QuestionModel.findOneAndUpdate(
+    return UlanganModel.findOneAndUpdate(
       { _id: id },
       { $set: updatedQuestion },
       { new: true }
@@ -73,7 +72,7 @@ export default function questionRepository() {
   const deleteById = (id) => {
     try {
       console.log(id, "from delete");
-      return QuestionModel.findOneAndRemove({ _id: id });
+      return UlanganModel.findOneAndRemove({ _id: id });
     } catch (error) {
       console.log(error);
     }
