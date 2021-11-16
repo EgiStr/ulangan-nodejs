@@ -1,5 +1,5 @@
 import questionDomain from "./questionDomain.js";
-import isObject from "../utils/isObject.js";
+import isObject from "../helpers/isObject.js";
 import errorStatus from "../helpers/errorStatus.js";
 
 export default function ulanganDomain(owner, title, topic, questions = []) {

@@ -1,4 +1,4 @@
-import isObject from "../utils/isObject.js";
+import isObject from "../helpers/isObject.js";
 
 export default function questionDomain(question, answers = []) {
   let correctAnswer = 0;
