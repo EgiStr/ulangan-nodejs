@@ -64,7 +64,14 @@ class UserServices {
   findByProperty(params) {
     return this.repository.findByProperty(params);
   }
-
+  historyUser(id, params) {
+    if (!id) {
+      throw (new Error("You havent Login").statusCode = 403);
+    }
+    return this.repository.findHistoryById(id, params).then((res) => {
+      return res;
+    });
+  }
   async updateUser(id, username) {
     if (!username) {
       throw new Error("Form Must Valid");

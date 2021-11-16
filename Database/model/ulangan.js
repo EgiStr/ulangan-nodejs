@@ -1,30 +1,24 @@
 import mongoose from "mongoose";
+import { QuestionSchema } from "./question.js";
+import { TopicSchema } from "./topic.js";
 
-const model = mongoose.model
-const Schema = mongoose.Schema
+const model = mongoose.model;
+const Schema = mongoose.Schema;
 
 const UlanganSchema = new Schema(
   {
-    title: String,
+    title: {
+      type: String,
+      required: true,
+    },
     owner: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
-    topic: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Topic",
-      },
-    ],
-    question: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Question",
-      },
-    ],
+    topic: [TopicSchema],
+    question: [QuestionSchema],
   },
   { timestamps: true }
 );
-
 
 export default model("Ulangan", UlanganSchema);

@@ -1,5 +1,6 @@
 import UlanganModel from "../model/ulangan.js";
-
+import questionRepository from "./questionRepo.js";
+import topicRepository from "./topicRepo.js";
 // move it to a proper place
 function omit(obj, ...props) {
   const result = { ...obj };
@@ -19,27 +20,31 @@ export default function ulanganRepository() {
   const findById = (id) => UlanganModel.findById(id);
 
   const add = async (ulangan) => {
+    const question = await questionRepository().addBulk(ulangan.question);
+    const topic = await topicRepository().getOrAdd(ulangan.topic);
     const ulanganNew = await UlanganModel.create({
       title: ulangan.title,
       owner: ulangan.owner,
-      topic: ulangan.topic,
-      question: ulangan.question,
+      topic,
+      question,
     });
     return ulanganNew;
   };
 
   const updateById = (id, ulanganDomain) => {
     const updatedUlangan = {
-      title: ulanganDomain.title,
-      topic:ulanganDomain.topic,
-      question:ulanganDomain.question,
+      title: ulanganDomain,
     };
 
-    return ulanganModel.findOneAndUpdate(
+    return UlanganModel.findOneAndUpdate(
       { _id: id },
       { $set: updatedUlangan },
       { new: true }
     );
+  };
+
+  const deleteUlangan = (id) => {
+    return UlanganModel.findOneAndDelete(id);
   };
 
   return {
@@ -47,6 +52,7 @@ export default function ulanganRepository() {
     countAll,
     findById,
     add,
-    updateById
+    updateById,
+    deleteUlangan,
   };
 }

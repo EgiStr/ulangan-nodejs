@@ -43,10 +43,32 @@ class UserControllers {
 
   dashboardUser = async (req, res, next) => {
     const userId = req.user;
-    console.log(userId)
     try {
       const user = await this.repository.findById(userId.id);
       res.status(200).json(user);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  historyUser = async (req, res, next) => {
+    const userId = req.user;
+    const params = {};
+
+    // Dynamically created query params based on endpoint params
+    for (const key in req.query) {
+      if (Object.prototype.hasOwnProperty.call(req.query, key)) {
+        params[key] = req.query[key];
+      }
+    }
+    // predefined query params (apart from dynamically) for pagination
+    params.page = params.page ? parseInt(params.page, 10) : 1;
+    params.perPage = params.perPage ? parseInt(params.perPage, 10) : 10;
+    
+    try {
+      const history = await this.repository.historyUser(userId.id,params);
+      
+      res.status(200).json(history);
     } catch (error) {
       next(error);
     }

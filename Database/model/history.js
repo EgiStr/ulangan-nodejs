@@ -5,11 +5,11 @@ const Schema = mongoose.Schema;
 
 const HistorySchema = new Schema(
   {
-    user_id: {
+    user: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
-    ulangan_id: {
+    ulangan: {
       type: Schema.Types.ObjectId,
       ref: "Ulangan",
     },

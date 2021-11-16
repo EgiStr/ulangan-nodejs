@@ -7,21 +7,17 @@ export default function () {
 
   const controller = new UserControllers();
 
-  router.route("/dashboard").get([authMiddleware],controller.dashboardUser);
+  router.route("/dashboard").get([authMiddleware], controller.dashboardUser);
+  router.route("/history").get([authMiddleware], controller.historyUser);
   router.route("/:id").get(controller.fetchUserById);
   router.route("/").get(controller.fetchUsersByProperty);
 
   // POST enpdpoints
-  router.route("/").post(controller.signin);
-
-  router.route("/login").post(controller.login);
-  router.route("/logout").post(controller.logout);
-
   // UPDATE endpointes
-  router.route("/").patch([authMiddleware],controller.updateUser)
-  
+  router.route("/").patch([authMiddleware], controller.updateUser);
+
   // DELETE endpointes
-  router.route("/").delete([authMiddleware],controller.deleteUser)
-  
+  router.route("/").delete([authMiddleware], controller.deleteUser);
+
   return router;
 }

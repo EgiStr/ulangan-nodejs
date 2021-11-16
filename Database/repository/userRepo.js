@@ -26,7 +26,11 @@ export default function userRepository() {
 
   const findById = (id) => UserModel.findById(id).select("-password");
 
-  const findHistoryById = (id) => HistoryModel.findById(id).populate("ulangan");
+  const findHistoryById = (id, params) =>
+    HistoryModel.find({ user: id })
+      .populate("ulangan")
+      .skip(params.perPage * params.page - params.perPage)
+      .limit(params.perPage);
 
   const add = (user) => {
     const newUser = new UserModel({
@@ -51,8 +55,7 @@ export default function userRepository() {
     );
   };
 
-  const deleteById = id => UserModel.findByIdAndRemove(id)
-
+  const deleteById = (id) => UserModel.findByIdAndRemove(id);
 
   return {
     findByProperty,

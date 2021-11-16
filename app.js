@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import errorHandlingMiddlware from "./middlewares/errorHandling.js";
 import configApp from "./config/configApp.js";
 import connectionDb from "./Database/connection.js";
-import routes from "./routers/index.js";
+import routesApp from "./routers/index.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -20,11 +20,12 @@ connectionDb(mongoose, {
   keepAlive: true,
   connectTimeoutMS: 1000,
 }).connectToMongo();
+routesApp(app);
 
-routes(app);
+app.use(errorHandlingMiddlware);
+
 server.listen(PORT, () => {
   console.log(`Server running in http://127.0.0.1:${PORT}`);
 });
 
 // error costume error | 404 error
-app.use(errorHandlingMiddlware);

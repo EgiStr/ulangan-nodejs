@@ -17,6 +17,7 @@ export default function historyRepository() {
     HistoryModel.countDocuments(omit(params, "page", "perPage"));
 
   const findById = (id) => HistoryModel.findById(id);
+  
 
   const add = (qt) => {
     const newHistory = new HistoryModel({
