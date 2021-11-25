@@ -7,11 +7,19 @@ export default class UlanganSevices {
   constructor(repository = ulanganRepository()) {
     this.repository = repository;
   }
+
+  
   findByIdQuestion(id) {
     return this.repository.findByIdQuestion(id);
   }
+  findQuestionByQuestionId(id){
+    return this.repository.findQuestionByQuestionId(id)
+  }
   findById(id) {
     return this.repository.findById(id);
+  }
+  findAllQuestionById(id) {
+    return this.repository.findAllQuestionByid(id)
   }
   countAll(params) {
     return this.repository.countAll(params);

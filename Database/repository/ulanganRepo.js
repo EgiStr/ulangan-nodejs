@@ -1,5 +1,7 @@
 import UlanganModel from "../model/ulangan.js";
+import historyRepository from "./historyRepo.js";
 import mongoose from "mongoose";
+import errorStatus from "../../helpers/errorStatus.js";
 const ObjectId = mongoose.mongo.ObjectId;
 
 // move it to a proper place
@@ -10,6 +12,8 @@ function omit(obj, ...props) {
 }
 
 export default function ulanganRepository() {
+  const history = historyRepository();
+
   const findByProperty = (params) =>
     UlanganModel.find(omit(params, "page", "perPage"))
       .skip(params.perPage * params.page - params.perPage)
@@ -19,7 +23,16 @@ export default function ulanganRepository() {
     UlanganModel.countDocuments(omit(params, "page", "perPage"));
 
   const findById = (id) => UlanganModel.findById(id);
-
+  const findAllQuestionByid = (id) =>
+    UlanganModel.aggregate([
+      { $match: { "_id": new ObjectId(id) } },
+      {
+        $project: {
+          _id:0,
+          questions:"$question",
+        },
+      },
+    ]);
   const findByIdQuestion = (id) =>
     UlanganModel.find({ "question._id": new ObjectId(id) });
 
@@ -41,6 +54,23 @@ export default function ulanganRepository() {
       return ulanganNew;
     } catch (error) {
       throw error;
+    }
+  };
+
+  const findQuestionByQuestionId = async (id) => {
+    try {
+      const ulangan = await UlanganModel.aggregate([
+        { $match: { "question._id": new ObjectId(id) } },
+        {
+          $project: {
+            answers: "$question.answers",
+            total: { $size: "$question" },
+          },
+        },
+      ]);
+      return ulangan;
+    } catch (error) {
+      throw errorStatus(error, 500);
     }
   };
 
@@ -114,5 +144,7 @@ export default function ulanganRepository() {
     addQuestion,
     updateQuestion,
     deleteQuestion,
+    findQuestionByQuestionId,
+    findAllQuestionByid,
   };
 }

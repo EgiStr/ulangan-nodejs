@@ -1,8 +1,11 @@
+import { decode } from "jsonwebtoken";
+import errorStatus from "../../helpers/errorStatus.js";
 import authServices from "../../services/authServices.js";
 
 export default function authMiddleware(req, res, next) {
   // Get token from header
   const token = req.cookies["X-accessToken"];
+
   const authService = authServices();
   if (!token) {
     const error = new Error("You Must Login | No access token found")
@@ -14,6 +17,6 @@ export default function authMiddleware(req, res, next) {
     req.user = decoded.user;
     next();
   } catch (err) {
-    throw new Error("Token is not valid");
+    throw new errorStatus(err)
   }
 }

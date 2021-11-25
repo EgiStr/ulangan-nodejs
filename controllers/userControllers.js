@@ -1,6 +1,9 @@
+import RefreshToken from "../Database/model/refreshToken.js";
+import dateExpired from "../helpers/dateExpired.js";
+import errorStatus from "../helpers/errorStatus.js";
 import authService from "../services/authServices.js";
 import userServices from "../services/userServices.js";
-
+const config = process.env;
 class UserControllers {
   repository = new userServices();
   authServies = authService();
@@ -108,7 +111,12 @@ class UserControllers {
       const { email, password } = req.body;
       const { access, refresh } = await this.repository.login(email, password);
       res.cookie("X-accessToken", access, {
-        maxAge: new Date() * 60 * 60 * 24,
+        maxAge: dateExpired(Number(config.jwtExpiration)),
+        // maxAge: dateExpired(0),
+        httpOnly: true,
+      });
+      res.cookie("X-refreshToken", refresh, {
+        maxAge: dateExpired(Number(config.jwtRefreshExpiration)),
         httpOnly: true,
       });
       res
@@ -123,12 +131,54 @@ class UserControllers {
     }
   };
 
-  logout = (req, res, next) => {
-    if (req.cookies["X-accessToken"]) {
-      res.cookie("X-accessToken", "", { maxAge: new Date(0) });
-      res.status(201).json({ message: "success logout" });
+  logout = async (req, res, next) => {
+    const [access, refresh] = [
+      req.cookies["X-accessToken"],
+      req.cookies["X-refreshToken"],
+    ];
+    if (!access || !refresh) {
+      res.status(400).json({
+        message: "you not login",
+      });
     } else {
-      next();
+      try {
+        res.cookie("X-accessToken", "", { maxAge: new Date(0) });
+        await this.repository.logout(refresh);
+        res.cookie("X-refreshToken", "", { maxAge: new Date(0) });
+        res.json({ message: "success logout", status: 200 });
+      } catch (error) {
+        throw errorStatus(error, 500);
+      }
+    }
+  };
+
+  refreshToken = async (req, res, next) => {
+    const { refreshToken: requestToken } = req.cookies["X-refreshToken"];
+
+    if (requestToken == null) {
+      return res.status(403).json({ message: "Refresh Token is required!" });
+    }
+    try {
+      const { access, refresh } = await this.repository.refreshToken(
+        requestToken
+      );
+      res.cookie("X-accessToken", access, {
+        maxAge: dateExpired(Number(config.jwtExpiration)),
+        httpOnly: true,
+      });
+      res.cookie("X-refreshToken", refresh, {
+        maxAge: dateExpired(Number(config.jwtRefreshExpiration)),
+        httpOnly: true,
+      });
+      res
+        .json({
+          message: "success login",
+          access,
+          refresh,
+        })
+        .status(200);
+    } catch (error) {
+      next(error);
     }
   };
 }

@@ -1,6 +1,8 @@
 import authService from "./authServices.js";
 import userDomain from "../domain/userDomain.js";
 import userRepository from "../Database/repository/userRepo.js";
+import RefreshToken from "../Database/model/refreshToken.js";
+import errorStatus from "../helpers/errorStatus.js";
 
 class UserServices {
   repository = userRepository();
@@ -50,10 +52,36 @@ class UserServices {
         email: user[0].email,
       },
     };
-    return {
-      access: this.authServies.generateToken(payload),
-      refresh: this.authServies.generateRefresh(payload),
-    };
+    return await this.authServies.createAccessAndRefreshToken(payload);
+  }
+  async refreshToken(token) {
+    try {
+      let refreshToken = await this.authServies.findRefreshToken(token);
+
+      if (!refreshToken) {
+        throw errorStatus("Refresh token is not valid !", 403);
+      }
+
+      refreshToken = this.authServies.verifyOrDeleteRefreshToken(refreshToken);
+      const payload = {
+        user: {
+          id: refreshToken.user._id,
+          username: refreshToken.user.username,
+          email: refreshToken.user.email,
+        },
+      };
+      return await this.authServies.createAccessAndRefreshToken(payload);
+    } catch (err) {
+      throw errorStatus(err, 500);
+    }
+  }
+  async logout(token){
+    try {
+      return await this.authServies.deleteRefreshToken(token)
+      
+    } catch (error) {
+      throw errorStatus(error,500)
+    }
   }
   findById(id) {
     return this.repository.findById(id);

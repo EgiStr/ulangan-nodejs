@@ -1,8 +1,41 @@
+import pusher from "../pusher.js";
 import UlanganSevices from "../services/ulanganServices.js";
-
+import HistorySevices from "../services/historyServices.js";
+import shuffleArray from "../helpers/shuffleArray.js";
 export default class UlanganControllers {
   constructor(services = new UlanganSevices()) {
     this.services = services;
+    this.history = new HistorySevices();
+    this.pusher = pusher;
+  }
+
+  placeAnswers = (req, res, next) => {
+    const user = req.user;
+    const { question_id, answers } = req.body;
+    this.services.findQuestionByQuestionId(question_id).then((result) => {
+      const data = result[0];
+      let answer;
+      data.answers.forEach((item) => {
+        item.forEach((it) => {
+          if (it._id.toString() === answers) {
+            answer = it.correct;
+          }
+        });
+      });
+      const grade = answer ? 100 / data.total : 0;
+      this.history
+        .updateHistory(data._id, user.id, grade, answers)
+        .then((response) => {
+          res.json(response);
+        })
+        .catch((err) => next(err));
+    });
+  };
+
+  timedQuestion(channel_name, question_timing = 17000, row, index) {
+    setTimeout(() => {
+      pusher.trigger(channel_name, "question-given", row);
+    }, index * question_timing);
   }
 
   fetchUlanganByProperty = (req, res, next) => {
@@ -57,10 +90,30 @@ export default class UlanganControllers {
     });
   };
 
-  findById = (req, res, next) => {
+  ulanganSolo = (req, res, next) => {
     this.services
       .findById(req.params.id)
-      .then((ulangan) => res.json(ulangan))
+      .then((ulangan) => {
+        res.json(ulangan);
+        res.send("ok");
+      })
+      .catch((error) => next(error));
+  };
+
+  ulangan = (req, res, next) => {
+    const channelName = `quizz-${req.params.channel}`;
+    const question_time = req.params.time
+      ? (req.params.time + 2) * 1000
+      : 17000;
+    this.services
+      .findAllQuestionById(req.params.id)
+      .then((ulangan) => {
+        const question = shuffleArray(ulangan);
+        question.forEach((item, i) => {
+          this.timedQuestion(channelName, question_time, item, i);
+        });
+        res.send("ok");
+      })
       .catch((error) => next(error));
   };
 

@@ -7,10 +7,14 @@ export default function ulanganRouter() {
   const controllers = new UlanganControllers();
 
   router.get("/", controllers.fetchUlanganByProperty);
-  router.get("/:id", controllers.findById);
-
+  
+  // realTime Pusher
+  router.get("/:id", controllers.ulangan);
+  
+  
   router.post("/", [authMiddleware], controllers.addUlangan);
-
+  router.post("/placeanswer",[authMiddleware],controllers.placeAnswers)
+  
   router.patch("/:id", [authMiddleware], controllers.updateUlangan);
 
   router.delete("/:id", [authMiddleware], controllers.deleteUlangan);

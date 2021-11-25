@@ -6,7 +6,8 @@ export default function () {
   const controller = new UserControllers();
 
   router.post("/login", controller.login);
-  router.post("/logout", controller.login);
+  router.post("/logout", controller.logout);
   router.post("/register", controller.signin);
+  router.post("/refresh",controller.refreshToken)
   return router;
 }
