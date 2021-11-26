@@ -153,7 +153,7 @@ class UserControllers {
   };
 
   refreshToken = async (req, res, next) => {
-    const { refreshToken: requestToken } = req.cookies["X-refreshToken"];
+    const requestToken = req.cookies["X-refreshToken"];
 
     if (requestToken == null) {
       return res.status(403).json({ message: "Refresh Token is required!" });
@@ -172,7 +172,7 @@ class UserControllers {
       });
       res
         .json({
-          message: "success login",
+          message: "success Refresh Token",
           access,
           refresh,
         })

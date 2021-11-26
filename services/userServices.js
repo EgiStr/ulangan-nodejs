@@ -62,7 +62,10 @@ class UserServices {
         throw errorStatus("Refresh token is not valid !", 403);
       }
 
-      refreshToken = this.authServies.verifyOrDeleteRefreshToken(refreshToken);
+      refreshToken = await this.authServies.verifyOrDeleteRefreshToken(
+        refreshToken
+      );
+
       const payload = {
         user: {
           id: refreshToken.user._id,
@@ -70,17 +73,17 @@ class UserServices {
           email: refreshToken.user.email,
         },
       };
+      await this.authServies.deleteRefreshToken(refreshToken.token); // rotate refresh token
       return await this.authServies.createAccessAndRefreshToken(payload);
     } catch (err) {
       throw errorStatus(err, 500);
     }
   }
-  async logout(token){
+  async logout(token) {
     try {
-      return await this.authServies.deleteRefreshToken(token)
-      
+      return await this.authServies.deleteRefreshToken(token);
     } catch (error) {
-      throw errorStatus(error,500)
+      throw errorStatus(error, 500);
     }
   }
   findById(id) {
