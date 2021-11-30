@@ -15,14 +15,14 @@ export default function ulanganRepository() {
   const history = historyRepository();
 
   const findByProperty = (params) =>
-    UlanganModel.find(omit(params, "page", "perPage"))
+    UlanganModel.find(omit(params, "page", "perPage")).select("-question -__v -updateAt").populate("owner","-password")
       .skip(params.perPage * params.page - params.perPage)
       .limit(params.perPage);
 
   const countAll = (params) =>
     UlanganModel.countDocuments(omit(params, "page", "perPage"));
 
-  const findById = (id) => UlanganModel.findById(id);
+  const findById = (id) => UlanganModel.findById(id).populate("owner","-password");
   const findAllQuestionByid = (id) =>
     UlanganModel.aggregate([
       { $match: { "_id": new ObjectId(id) } },
@@ -34,12 +34,12 @@ export default function ulanganRepository() {
       },
     ]);
   const findByIdQuestion = (id) =>
-    UlanganModel.find({ "question._id": new ObjectId(id) });
+    UlanganModel.find({ "question._id": new ObjectId(id) }).populate("owner","-password");
 
   const findByTopic = (name, params) =>
     UlanganModel.find({
       topic: name,
-    })
+    }).populate("owner")
       .skip(params.perPage * params.page - params.perPage)
       .limit(params.perPage);
 

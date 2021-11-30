@@ -50,6 +50,7 @@ export default function authService() {
   const deleteRefreshToken = async (token) =>
     await RefreshToken.findOneAndDelete({ token });
 
+
   return {
     encryptPassword,
     compare,

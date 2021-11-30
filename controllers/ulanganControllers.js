@@ -62,6 +62,8 @@ export default class UlanganControllers {
         response.totalItems = totalItems;
         response.totalPages = Math.ceil(totalItems / params.perPage);
         response.itemsPerPage = params.perPage;
+        response.HasNextPage = params.page < response.totalPages;
+        response.HasPreviousPage = params.page > response.totalPages;
         return res.json(response);
       })
       .catch((error) => next(error));
@@ -112,7 +114,7 @@ export default class UlanganControllers {
         question.forEach((item, i) => {
           this.timedQuestion(channelName, question_time, item, i);
         });
-        res.send("ok");
+        res.json({ total: ulangan.length });
       })
       .catch((error) => next(error));
   };

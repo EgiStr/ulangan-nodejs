@@ -8,6 +8,8 @@ class UserControllers {
   repository = new userServices();
   authServies = authService();
 
+  
+    
   fetchUsersByProperty = (req, res, next) => {
     const params = {};
     const response = {};
@@ -98,10 +100,10 @@ class UserControllers {
     }
   };
 
-  signin = (req, res, next) => {
-    const { username, password, password2, email, role } = req.body;
+  register = (req, res, next) => {
+    const { username, password, password2, email } = req.body;
     this.repository
-      .signin(username, password, password2, email, role)
+      .signin(username, password, password2, email)
       .then((user) => res.json(user))
       .catch((error) => next(error));
   };
@@ -110,18 +112,8 @@ class UserControllers {
     try {
       const { email, password } = req.body;
       const { access, refresh } = await this.repository.login(email, password);
-      res.cookie("X-accessToken", access, {
-        maxAge: dateExpired(Number(config.jwtExpiration)),
-        // maxAge: dateExpired(0),
-        httpOnly: true,
-      });
-      res.cookie("X-refreshToken", refresh, {
-        maxAge: dateExpired(Number(config.jwtRefreshExpiration)),
-        httpOnly: true,
-      });
       res
         .json({
-          message: "success login",
           access,
           refresh,
         })
@@ -131,20 +123,25 @@ class UserControllers {
     }
   };
 
+  verifyEmail = async (req, res, next) => {
+    const { email } = req.body;
+    try {
+      const user = await this.repository.verifyEmail(email);
+      res.status(200).json(user);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+
+
   logout = async (req, res, next) => {
-    const [access, refresh] = [
-      req.cookies["X-accessToken"],
-      req.cookies["X-refreshToken"],
-    ];
-    if (!access || !refresh) {
-      res.status(400).json({
-        message: "you not login",
-      });
+    const refresh = req.body;
+    if (!refresh) {
+      res.status(403).json({ message: "you not login" });
     } else {
       try {
-        res.cookie("X-accessToken", "", { maxAge: new Date(0) });
         await this.repository.logout(refresh);
-        res.cookie("X-refreshToken", "", { maxAge: new Date(0) });
         res.json({ message: "success logout", status: 200 });
       } catch (error) {
         throw errorStatus(error, 500);
@@ -153,7 +150,7 @@ class UserControllers {
   };
 
   refreshToken = async (req, res, next) => {
-    const requestToken = req.cookies["X-refreshToken"];
+    const { refreshToken: requestToken } = req.body;
 
     if (requestToken == null) {
       return res.status(403).json({ message: "Refresh Token is required!" });
@@ -162,17 +159,8 @@ class UserControllers {
       const { access, refresh } = await this.repository.refreshToken(
         requestToken
       );
-      res.cookie("X-accessToken", access, {
-        maxAge: dateExpired(Number(config.jwtExpiration)),
-        httpOnly: true,
-      });
-      res.cookie("X-refreshToken", refresh, {
-        maxAge: dateExpired(Number(config.jwtRefreshExpiration)),
-        httpOnly: true,
-      });
       res
         .json({
-          message: "success Refresh Token",
           access,
           refresh,
         })

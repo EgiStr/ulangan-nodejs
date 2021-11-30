@@ -9,7 +9,7 @@ class UserServices {
 
   authServies = authService();
 
-  async signin(username, password, password2, email, role) {
+  async signin(username, password, password2, email) {
     // TODO: add a proper validation (consider using @hapi/joi)
     if (!username || !password || !email) {
       throw new Error("username, password and email fields cannot be empty");
@@ -54,6 +54,7 @@ class UserServices {
     };
     return await this.authServies.createAccessAndRefreshToken(payload);
   }
+
   async refreshToken(token) {
     try {
       let refreshToken = await this.authServies.findRefreshToken(token);
@@ -113,6 +114,42 @@ class UserServices {
 
   deleteUser(id) {
     return this.repository.deleteById(id);
+  }
+  // email verify
+  async verifyEmail(token) {
+    try {
+      const user = await this.repository.findByPropertyVerifyEmail({ token });
+      if (!user.length) {
+        throw errorStatus("Token is not valid !", 403);
+      }
+      await this.repository.updateById(user[0].id, { isVerified: true });
+      return user[0];
+    } catch (err) {
+      throw errorStatus(err, 500);
+    }
+  }
+  // forgot password
+  async forgotPassword(email) {
+    try {
+      const user = await this.repository.findByPropertyForgotPassword({
+        email,
+      });
+      if (!user.length) {
+        throw errorStatus("Email is not valid !", 403);
+      }
+      const resetToken = await this.authServies.createResetToken(user[0].id);
+      const link = `${process.env.FRONTEND_URL}/reset-password/${resetToken.token}`;
+      const message = {
+        to: user[0].email,
+        from: process.env.EMAIL_FROM,
+        subject: "Reset Password",
+        text: `Reset Password Link: ${link}`,
+      };
+      await this.authServies.sendEmail(message);
+      return user[0];
+    } catch (err) {
+      throw errorStatus(err, 500);
+    }
   }
 }
 
