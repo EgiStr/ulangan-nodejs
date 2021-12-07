@@ -70,4 +70,5 @@ const createData = (numUsers = 5) => {
   
 };
 
+console.log(createAnswer(5));
 export default createData;

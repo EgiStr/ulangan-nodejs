@@ -10,7 +10,7 @@ const AnswerSchema = new Schema({
   },
 });
 
-export const QuestionSchema = new Schema({
+export const  QuestionSchema = new Schema({
   question: {
     type: String,
     required: true,

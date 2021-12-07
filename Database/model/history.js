@@ -19,7 +19,7 @@ const HistorySchema = new Schema(
       validate: [(val) => val <= 100 && val >= 0, "Please in range 0-100"],
       default:0
     },
-    answers: [{type:Schema.Types.ObjectId}],
+    answers: [],
   },
   { timestamps: true }
 );

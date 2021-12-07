@@ -14,32 +14,59 @@ function omit(obj, ...props) {
 export default function ulanganRepository() {
   const history = historyRepository();
 
-  const findByProperty = (params) =>
-    UlanganModel.find(omit(params, "page", "perPage")).select("-question -__v -updateAt").populate("owner","-password")
-      .skip(params.perPage * params.page - params.perPage)
-      .limit(params.perPage);
+  const findByProperty = (params) => {
+    // if params.s do search in UlanganModel
+    if (params.q) {
+      return UlanganModel.find(
+        {
+          $or: [
+            { $text: { $search: params.q } },
+            { title: { $regex: params.q, $options: "i" } },
+            { topic: { $regex: params.q, $options: "i" } },
+          ],
+        },
+        { score: { $meta: "textScore" } }
+      )
+        .sort({ score: { $meta: "textScore" } })
+        .select("-question -__v -updateAt")
+        .populate("owner", "_id username ")
+        .skip(params.perPage * params.page - params.perPage)
+        .limit(params.perPage);
+    } else {
+      return UlanganModel.find(omit(params, "page", "perPage"))
+        .select("-updateAt -__v -updateAt")
+        .populate("owner", "_id username")
+        .skip(params.perPage * params.page - params.perPage)
+        .limit(params.perPage);
+    }
+  };
 
   const countAll = (params) =>
     UlanganModel.countDocuments(omit(params, "page", "perPage"));
 
-  const findById = (id) => UlanganModel.findById(id).populate("owner","-password");
+  const findById = (id) =>
+    UlanganModel.findById(id).populate("owner", "-password");
   const findAllQuestionByid = (id) =>
     UlanganModel.aggregate([
-      { $match: { "_id": new ObjectId(id) } },
+      { $match: { _id: new ObjectId(id) } },
       {
         $project: {
-          _id:0,
-          questions:"$question",
+          _id: 0,
+          questions: "$question",
         },
       },
     ]);
   const findByIdQuestion = (id) =>
-    UlanganModel.find({ "question._id": new ObjectId(id) }).populate("owner","-password");
+    UlanganModel.find({ "question._id": new ObjectId(id) }).populate(
+      "owner",
+      "-password"
+    );
 
   const findByTopic = (name, params) =>
     UlanganModel.find({
       topic: name,
-    }).populate("owner")
+    })
+      .populate("owner")
       .skip(params.perPage * params.page - params.perPage)
       .limit(params.perPage);
 

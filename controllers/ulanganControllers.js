@@ -1,40 +1,53 @@
-import pusher from "../pusher.js";
+import Pusher from "pusher";
 import UlanganSevices from "../services/ulanganServices.js";
 import HistorySevices from "../services/historyServices.js";
 import shuffleArray from "../helpers/shuffleArray.js";
+import errorStatus from "../helpers/errorStatus.js";
+
 export default class UlanganControllers {
   constructor(services = new UlanganSevices()) {
     this.services = services;
     this.history = new HistorySevices();
-    this.pusher = pusher;
+    this.pusher = new Pusher({
+      appId: process.env.APP_ID,
+      key: process.env.APP_KEY,
+      secret: process.env.APP_SECRET,
+      cluster: process.env.APP_CLUSTER,
+    });
   }
 
   placeAnswers = (req, res, next) => {
     const user = req.user;
     const { question_id, answers } = req.body;
-    this.services.findQuestionByQuestionId(question_id).then((result) => {
-      const data = result[0];
-      let answer;
-      data.answers.forEach((item) => {
-        item.forEach((it) => {
-          if (it._id.toString() === answers) {
-            answer = it.correct;
-          }
+    this.services
+      .findQuestionByQuestionId(question_id)
+      .then((result) => {
+        const data = result[0];
+        if(!data){
+          throw errorStatus("Question not found",400)
+        }
+        let answer;
+        data.answers.forEach((item) => {
+          item.forEach((it) => {
+            if (it._id.toString() === answers.asnwer) {
+              answer = it.correct;
+            }
+          });
         });
-      });
-      const grade = answer ? 100 / data.total : 0;
-      this.history
-        .updateHistory(data._id, user.id, grade, answers)
-        .then((response) => {
-          res.json(response);
-        })
-        .catch((err) => next(err));
-    });
+        const grade = answer ? 100 / data.total : 0;
+        this.history
+          .updateHistory(data._id, user.id, grade, answers)
+          .then((response) => {
+            res.json(response);
+          })
+          .catch((err) => next(err));
+      })
+      .catch((err) => next(err));
   };
 
   timedQuestion(channel_name, question_timing = 17000, row, index) {
     setTimeout(() => {
-      pusher.trigger(channel_name, "question-given", row);
+      this.pusher.trigger(channel_name, "question-given", row);
     }, index * question_timing);
   }
 
@@ -51,7 +64,7 @@ export default class UlanganControllers {
     // predefined query params (apart from dynamically) for pagination
     params.page = params.page ? parseInt(params.page, 10) : 1;
     params.perPage = params.perPage ? parseInt(params.perPage, 10) : 10;
-
+    console.log(params);
     this.services
       .findByProperty(params)
       .then((ulangan) => {
@@ -66,7 +79,7 @@ export default class UlanganControllers {
         response.HasPreviousPage = params.page > response.totalPages;
         return res.json(response);
       })
-      .catch((error) => next(error));
+    .catch((error) => next(error));
   };
 
   findByTopic = (req, res, next) => {
@@ -103,18 +116,19 @@ export default class UlanganControllers {
   };
 
   ulangan = (req, res, next) => {
-    const channelName = `quizz-${req.params.channel}`;
-    const question_time = req.params.time
-      ? (req.params.time + 2) * 1000
-      : 17000;
+    const channelName = `quiz-solo-${req.query.channel}`;
+    const question_time = req.query.time
+      ? Number(req.query.time) * 1000
+      : 15000;
     this.services
       .findAllQuestionById(req.params.id)
       .then((ulangan) => {
-        const question = shuffleArray(ulangan);
+        const question = shuffleArray(ulangan[0].questions);
         question.forEach((item, i) => {
           this.timedQuestion(channelName, question_time, item, i);
         });
-        res.json({ total: ulangan.length });
+        res.json({ total: question.length });
+        // res.send("fuck")
       })
       .catch((error) => next(error));
   };

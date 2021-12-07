@@ -28,7 +28,50 @@ export default function historyRepository() {
     });
     return newHistory.save();
   };
-
+  const update = (qt) => {
+    const data = {
+      user: new ObjectId(qt.user_id),
+      ulangan: new ObjectId(qt.ulangan_id),
+    };
+    HistoryModel.bulkWrite([
+      {
+        updateOne: {
+          filter: data,
+          update: {
+            $set: {
+              ulangan_id:
+                typeof qt.ulangan_id === ObjectId
+                  ? qt.ulangan_id
+                  : new ObjectId(qt.ulangan_id),
+              user_id: new ObjectId(qt.user_id),
+            },
+            $inc: {
+              grade: qt.grade,
+            },
+            $addToSet: {
+              answers: qt.answer,
+            },
+          },
+          new: true,
+          upsert: true,
+        },
+      },
+      {
+        updateOne: {
+          filter: data,
+          update: {
+            $set: {
+              "answers.$[element].answer": qt.answer.answer,
+            },
+          },
+          arrayFilters: [{ "element.question_id": qt.answer.question_id }],
+          new: true,
+          upsert: true,
+        },
+      },
+    ]);
+    return HistoryModel.find(data);
+  };
   const getOrUpdate = async (qt) => {
     const data = {
       user: new ObjectId(qt.user_id),
@@ -38,14 +81,14 @@ export default function historyRepository() {
       data, // find a document with that filter
       {
         $set: {
-          ulangan_id: new ObjectId(qt.ulangan_id),
+          ulangan_id:
+            typeof qt.ulangan_id === ObjectId
+              ? qt.ulangan_id
+              : new ObjectId(qt.ulangan_id),
           user_id: new ObjectId(qt.user_id),
         },
         $inc: {
           grade: qt.grade,
-        },
-        $push: {
-          answers: qt.answer,
         },
       }, // document to insert when nothing was found
       { upsert: true, new: true, runValidators: true }
@@ -59,5 +102,6 @@ export default function historyRepository() {
     findById,
     add,
     getOrUpdate,
+    update,
   };
 }
