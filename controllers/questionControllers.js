@@ -6,19 +6,22 @@ export default class QuestionControllers {
 
   addQuestion = (req, res, next) => {
     const { id_ulangan, question, answers } = req.body;
-
     this.services
       .addNewQuestion(id_ulangan, question, answers)
       .then((result) => {
         res.status(201).json(result);
       })
-      .catch((err) => next(err));
+      .catch((err) => {
+        console.log(err);
+        next(err);
+      });
   };
 
   updateQuestion = (req, res, next) => {
     const user = req.user;
     const { question, answers } = req.body;
     const { id } = req.params;
+
     this.services.findByIdQuestion(id).then((result) => {
       if (result.length === 0) {
         const error = new Error("invalid Id");

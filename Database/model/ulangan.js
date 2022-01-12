@@ -16,6 +16,14 @@ const UlanganSchema = new Schema(
       ref: "User",
     },
     topic: [{ type: String, index: true }],
+    draft: {
+      type: Boolean,
+      default: true,
+    },
+    private: {
+      type: Boolean,
+      default: false,
+    },
     question: [QuestionSchema],
   },
   { timestamps: true }
@@ -40,7 +48,6 @@ UlanganSchema.statics.lookup = function (opt) {
         foreignField: "_id",
       },
     },
-    
   ];
 
   return this.aggregate(pipeline)
@@ -53,5 +60,7 @@ UlanganSchema.statics.lookup = function (opt) {
 };
 
 const UlanganModel = model("Ulangan", UlanganSchema);
+
 UlanganModel.createIndexes();
+
 export default UlanganModel;

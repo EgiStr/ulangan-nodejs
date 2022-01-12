@@ -8,15 +8,12 @@ export default function questionDomain(question, answers = []) {
     error.statusCode = 400;
     throw error;
   }
+  console.log(answers)
   answers.forEach((item) => {
     if (isObject(item)) {
       if (item.correct) {
         correctAnswer++;
       }
-    } else {
-      const error = new Error("answer form not Valid");
-      error.statusCode = 400;
-      throw error;
     }
   });
   if (correctAnswer !== 1) {

@@ -45,7 +45,15 @@ export default function ulanganRepository() {
     UlanganModel.countDocuments(omit(params, "page", "perPage"));
 
   const findById = (id) =>
-    UlanganModel.findById(id).populate("owner", "-password");
+    UlanganModel.findById(id)
+      .select("-question -__v -updateAt")
+      .populate("owner", "_id username");
+
+  const findByIdWithQuestion = (id) =>
+    UlanganModel.findById(id)
+      .select("-__v -updateAt")
+      .populate("owner", "_id username");
+
   const findAllQuestionByid = (id) =>
     UlanganModel.aggregate([
       { $match: { _id: new ObjectId(id) } },
@@ -59,8 +67,8 @@ export default function ulanganRepository() {
   const findByIdQuestion = (id) =>
     UlanganModel.find({ "question._id": new ObjectId(id) }).populate(
       "owner",
-      "-password"
-    );
+      "_id username"
+    ).select("-__v -updateAt -question");
 
   const findByTopic = (name, params) =>
     UlanganModel.find({
@@ -76,7 +84,8 @@ export default function ulanganRepository() {
         title: ulangan.title,
         owner: ulangan.owner,
         topic: ulangan.topic,
-        question: ulangan.question,
+        private: ulangan.isPrivate,
+        draft: true,
       });
       return ulanganNew;
     } catch (error) {
@@ -101,28 +110,35 @@ export default function ulanganRepository() {
     }
   };
 
-  const updateById = (id, ulanganDomain) => {
-    const updatedUlangan = {
-      title: ulanganDomain,
-    };
-    const topics = ulangan.topic;
+  const updateById = async (id, ulanganDomain) => {
+    try {
+      const updatedUlangan = {
+        title: ulanganDomain.title,
+        private: ulanganDomain.isPrivate,
+        draft: ulanganDomain.draft,
+      };
+      const topics = ulanganDomain.topic;
 
-    return UlanganModel.bulkWrite([
-      {
-        updateOne: {
-          filter: { _id: id },
-          update: { $set: updatedUlangan },
-          new: true,
+      const success = await UlanganModel.bulkWrite([
+        {
+          updateOne: {
+            filter: { _id: id },
+            update: { $set: updatedUlangan },
+            new: true,
+          },
         },
-      },
-      {
-        updateOne: {
-          filter: { _id: id },
-          update: { $addToSet: { topic: { $each: topics } } },
-          new: true,
+        {
+          updateOne: {
+            filter: { _id: id },
+            update: { $addToSet: { topic: { $each: topics } } },
+            new: true,
+          },
         },
-      },
-    ]);
+      ]);
+      return UlanganModel.findById(id);
+    } catch (error) {}
+    console.log("BULK update error");
+    throw errorStatus(err, 500);
   };
 
   const deleteUlangan = (id) => {
@@ -159,6 +175,18 @@ export default function ulanganRepository() {
       { new: true }
     );
 
+  const findDraftUlangan = async (user_id) => {
+    let data = await UlanganModel.find({
+      owner: user_id,
+    })
+      .select("-__v -updateAt -topic")
+      .populate("owner", "username");
+    return data.map((item) => ({
+      ...item._doc,
+      question: item.question.length,
+    }));
+  };
+
   return {
     findByProperty,
     findByIdQuestion,
@@ -173,5 +201,7 @@ export default function ulanganRepository() {
     deleteQuestion,
     findQuestionByQuestionId,
     findAllQuestionByid,
+    findDraftUlangan,
+    findByIdWithQuestion,
   };
 }

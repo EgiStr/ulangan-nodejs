@@ -56,6 +56,7 @@ class UserControllers {
     }
   };
 
+
   historyUser = async (req, res, next) => {
     const userId = req.user;
     const params = {};

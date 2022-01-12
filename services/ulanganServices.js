@@ -8,18 +8,21 @@ export default class UlanganSevices {
     this.repository = repository;
   }
 
-  
   findByIdQuestion(id) {
     return this.repository.findByIdQuestion(id);
   }
-  findQuestionByQuestionId(id){
-    return this.repository.findQuestionByQuestionId(id)
+  findQuestionByQuestionId(id) {
+    return this.repository.findQuestionByQuestionId(id);
   }
   findById(id) {
     return this.repository.findById(id);
   }
+  findByIdWithQuestion(id) {
+    return this.repository.findByIdWithQuestion(id);
+  }
+
   findAllQuestionById(id) {
-    return this.repository.findAllQuestionByid(id)
+    return this.repository.findAllQuestionByid(id);
   }
   countAll(params) {
     return this.repository.countAll(params);
@@ -36,14 +39,11 @@ export default class UlanganSevices {
     });
     return result;
   }
-  async addUlangan(user_id, title, topic, question) {
-    if (!user_id || !title || !topic) {
+  async addUlangan(user_id, title, topic, isPrivate) {
+    if (!user_id || !title || !topic || isPrivate === undefined) {
       throw new Error("form not valid");
     }
-    if (!question.length > 0) {
-      throw new Error("question must required");
-    }
-    const ulangan = ulanganDomain(user_id, title, topic, question);
+    const ulangan = ulanganDomain(user_id, title, topic, isPrivate);
     const result = await this.repository.add(ulangan).catch((err) => {
       throw new Error(err);
     });
@@ -54,11 +54,25 @@ export default class UlanganSevices {
     return await this.repository.deleteUlangan(id);
   }
 
-  async updateUlangan(id, title, topic) {
-    return await this.repository.updateById(id, { title, topic });
+  async updateUlangan(id, title, topic, isPrivate, draft) {
+    if (!id || !title || !topic || draft === undefined) {
+      throw errorStatus("form not valid", 400);
+    }
+    if (!Array.isArray(topic)) {
+      throw errorStatus("topic unvalid!", 400);
+    }
+    return await this.repository.updateById(id, {
+      title,
+      topic,
+      isPrivate,
+      draft,
+    });
   }
-
+  findDraftUlangan = async (user_id) => {
+    return await this.repository.findDraftUlangan(user_id);
+  };
   addNewQuestion = async (id_ulangan, question, answers) => {
+    console.log(question, id_ulangan, answers);
     if (!id_ulangan || !question || !answers) {
       const error = new Error("form not Valid");
       error.statusCode = 400;
@@ -80,6 +94,6 @@ export default class UlanganSevices {
     return await this.repository.updateQuestion(id_question, newQuesiton);
   };
   deleteQuestions = async (id) => {
-   return await this.repository.deleteQuestion(id);
+    return await this.repository.deleteQuestion(id);
   };
 }

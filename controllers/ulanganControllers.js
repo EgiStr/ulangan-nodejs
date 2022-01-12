@@ -23,8 +23,8 @@ export default class UlanganControllers {
       .findQuestionByQuestionId(question_id)
       .then((result) => {
         const data = result[0];
-        if(!data){
-          throw errorStatus("Question not found",400)
+        if (!data) {
+          throw errorStatus("Question not found", 400);
         }
         let answer;
         data.answers.forEach((item) => {
@@ -64,7 +64,6 @@ export default class UlanganControllers {
     // predefined query params (apart from dynamically) for pagination
     params.page = params.page ? parseInt(params.page, 10) : 1;
     params.perPage = params.perPage ? parseInt(params.perPage, 10) : 10;
-    console.log(params);
     this.services
       .findByProperty(params)
       .then((ulangan) => {
@@ -79,7 +78,7 @@ export default class UlanganControllers {
         response.HasPreviousPage = params.page > response.totalPages;
         return res.json(response);
       })
-    .catch((error) => next(error));
+      .catch((error) => next(error));
   };
 
   findByTopic = (req, res, next) => {
@@ -105,12 +104,20 @@ export default class UlanganControllers {
     });
   };
 
-  ulanganSolo = (req, res, next) => {
+  ulanganMulti = (req, res, next) => {
+    const channelName = `presence-multiplayer-${req.query.channel}`;
+    const question_time = req.query.time
+      ? Number(req.query.time) * 1000
+      : 15000;
     this.services
-      .findById(req.params.id)
+      .findAllQuestionById(req.params.id)
       .then((ulangan) => {
-        res.json(ulangan);
-        res.send("ok");
+        const question = shuffleArray(ulangan[0].questions);
+        const total = question.length;
+        question.forEach((item, i) => {
+          this.timedQuestion(channelName, question_time, { ...item, total }, i);
+        });
+        res.status(200);
       })
       .catch((error) => next(error));
   };
@@ -134,55 +141,95 @@ export default class UlanganControllers {
   };
 
   updateUlangan = (req, res, next) => {
-    const { title, topic } = req.body;
-    const user = req.user;
-    const id = req.params.id;
-    this.services.findById(params.id).then((result) => {
-      if (result === null) {
-        const error = new Error("invalid Id");
-        throw error;
-      }
-      if (result.owner._id.toString() !== user.id) {
-        const error = new Error("You havent permission to Update");
-        error.statusCode = 403;
-        throw error;
-      }
-      this.services
-        .updateUlangan(id, title, topic)
-        .then((response) => {
-          res.status(200).json(response);
-        })
-        .catch((err) => next(err));
-    });
+    try {
+      const { title, topic, isPrivate, draft } = req.body;
+      console.log(topic,draft);
+      const user = req.user;
+      const id = req.params.id;
+      this.services.findById(id).then((result) => {
+        if (result === null) {
+          const error = new Error("invalid Id");
+          throw error;
+        }
+        if (result.owner._id.toString() !== user.id) {
+          const error = new Error("You havent permission to Update");
+          error.statusCode = 403;
+          throw error;
+        }
+
+        this.services
+          .updateUlangan(
+            id,
+            title || result.title,
+            topic || result.topic,
+            isPrivate !== undefined ? isPrivate : result.isPrivate || false,
+            draft !== undefined ? draft : result.draft
+          )
+          .then((response) => {
+            res.status(200).json(response);
+          })
+          .catch((err) => {
+            console.log("di sini", err);
+            next(err);
+          });
+      });
+    } catch (error) {
+      console.log("error", error);
+      next(error);
+    }
+  };
+
+  draftUserUlangan = (req, res, next) => {
+    try {
+      const user = req.user;
+      this.services.findDraftUlangan(user.id).then((result) => {
+        res.status(200).json(result);
+      });
+    } catch (error) {
+      console.log("error", error);
+      next(error);
+    }
+  };
+
+  detailUlangan = (req, res, next) => {
+    try {
+      const id = req.params.id;
+      this.services.findByIdWithQuestion(id).then((result) => {
+        if (result === null) {
+          const error = new Error("invalid Id");
+          throw error;
+        }
+        res.status(200).json(result);
+      });
+    } catch (error) {
+      console.log("error", error);
+      next(error);
+    }
   };
 
   addUlangan = (req, res, next) => {
-    const { title, question, topic } = req.body;
+    const { title, topic, isPrivate } = req.body;
+
     const user = req.user;
-    if (!Array.isArray(question)) {
-      const error = new Error("question form not valid");
-      error.statusCode = 400;
-      throw error;
-    }
     this.services
-      .addUlangan(user.id, title, topic, question)
+      .addUlangan(user.id, title, topic, isPrivate)
       .then((response) => {
         res.status(201).json(response);
       })
-      .catch((err) => next(err));
+      .catch((err) => {
+        console.log(err);
+        next(err);
+      });
   };
 
   deleteUlangan = (req, res, next) => {
     const user = req.user;
     const params = req.params;
+
     this.services
       .findById(params.id)
       .then((result) => {
-        if (result.length === 0) {
-          const error = new Error("invalid Id");
-          throw error;
-        }
-        if (result[0].owner._id.toString() !== user.id) {
+        if (result.owner._id.toString() !== user.id) {
           const error = new Error("You havent permission to delete");
           error.statusCode = 403;
           throw error;
@@ -195,6 +242,9 @@ export default class UlanganControllers {
           })
           .catch((err) => next(err));
       })
-      .catch((err) => next(new Error("invalide Id")));
+      .catch((err) => {
+        console.log(err);
+        next(new Error("invalide Id"));
+      });
   };
 }

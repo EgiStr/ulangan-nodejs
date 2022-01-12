@@ -1,5 +1,6 @@
 import Pusher from "pusher";
 import express from "express";
+import authMiddleware from "../middlewares/auth/authMiddleware.js";
 
 export default function pusherRouter() {
   const pusher = new Pusher({
@@ -10,20 +11,21 @@ export default function pusherRouter() {
   });
 
   const router = express.Router();
-  const channel_name = "quiz-channel";
-  const question_timing = 13000; // 10s to show + 2s latency
-  
-  const timedQuestion = (row, index) => {
-    setTimeout(() => {
-      pusher.trigger(channel_name, "question-given", row);
-    }, index * question_timing);
-  };
 
-  router.post("/auth", (req, res) => {
-    const socketId = req.body.socket_id;
-    const channel = req.body.channel_name;
-    const auth = pusher.authenticate(socketId, channel);
-    res.send(auth);
+  router.post("/auth", [authMiddleware], (req, res) => {
+    try {
+      const socketId = req.body.socket_id;
+      const channel = req.body.channel_name;
+      const user = req.user;
+      const presenceData = {
+        user_id: user.id,
+        user_info: user,
+      };
+      const auth = pusher.authenticate(socketId, channel, presenceData);
+      res.send(auth);
+    } catch (error) {
+      console.log(error);
+    }
   });
   return router;
 }
