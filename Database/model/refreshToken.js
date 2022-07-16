@@ -12,7 +12,7 @@ const RefreshTokenSchema = new mongoose.Schema({
   },
   expiryDate: {
     type: Date,
-    expires: Number(config.jwtRefreshExpiration)/1000,
+    // expires: Number(config.jwtRefreshExpiration)/1000,
   },
 });
 
@@ -23,7 +23,7 @@ RefreshTokenSchema.statics.createToken = async function (user_id) {
   let _object = new this({
     token: _token,
     user: user_id,
-    expiryDate: expiredAt.getTime(),
+    // expiryDate: expiredAt.getTime(),
   });
 
   let refreshToken = await _object.save();

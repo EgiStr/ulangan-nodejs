@@ -29,14 +29,14 @@ export default class UlanganControllers {
         let answer;
         data.answers.forEach((item) => {
           item.forEach((it) => {
-            if (it._id.toString() === answers.asnwer) {
+            if (it._id.toString() === answers) {
               answer = it.correct;
             }
           });
         });
         const grade = answer ? 100 / data.total : 0;
         this.history
-          .updateHistory(data._id, user.id, grade, answers)
+          .updateHistory(data._id, user.id, grade, { answer:answers, question: question_id })
           .then((response) => {
             res.json(response);
           })
@@ -143,10 +143,10 @@ export default class UlanganControllers {
   updateUlangan = (req, res, next) => {
     try {
       const { title, topic, isPrivate, draft } = req.body;
-      console.log(topic,draft);
       const user = req.user;
       const id = req.params.id;
-      this.services.findById(id).then((result) => {
+
+      this.services.findByIdWithQuestion(id).then((result) => {
         if (result === null) {
           const error = new Error("invalid Id");
           throw error;
@@ -155,6 +155,10 @@ export default class UlanganControllers {
           const error = new Error("You havent permission to Update");
           error.statusCode = 403;
           throw error;
+        }
+        if (result.question.length <= 0 && !draft) {
+          next(errorStatus("You can't Publish if there is no question", 400));
+          return;
         }
 
         this.services
@@ -174,7 +178,7 @@ export default class UlanganControllers {
           });
       });
     } catch (error) {
-      console.log("error", error);
+      console.log("error");
       next(error);
     }
   };

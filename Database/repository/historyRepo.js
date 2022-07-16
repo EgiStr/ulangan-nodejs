@@ -18,7 +18,12 @@ export default function historyRepository() {
   const countAll = (params) =>
     HistoryModel.countDocuments(omit(params, "page", "perPage"));
 
-  const findById = (id) => HistoryModel.findById(id);
+  const findById = (id) => HistoryModel.findById(id).populate("ulangan");
+
+  const findByIdUser = (id) =>
+    HistoryModel.find({
+      user_id: id,
+    }).populate("ulangan", "_id title");
 
   const add = (qt) => {
     const newHistory = new HistoryModel({
@@ -28,49 +33,49 @@ export default function historyRepository() {
     });
     return newHistory.save();
   };
+
   const update = (qt) => {
-    const data = {
-      user: new ObjectId(qt.user_id),
-      ulangan: new ObjectId(qt.ulangan_id),
-    };
-    HistoryModel.bulkWrite([
-      {
-        updateOne: {
-          filter: data,
-          update: {
-            $set: {
-              ulangan_id:
-                typeof qt.ulangan_id === ObjectId
-                  ? qt.ulangan_id
-                  : new ObjectId(qt.ulangan_id),
-              user_id: new ObjectId(qt.user_id),
+    try {
+      const data = {
+        user: new ObjectId(qt.user_id),
+        ulangan: new ObjectId(qt.ulangan_id),
+      };
+      HistoryModel.bulkWrite([
+        {
+          updateOne: {
+            filter: data,
+            update: {
+              $pull: { answers: { question: qt.answer.question } },
             },
-            $inc: {
-              grade: qt.grade,
-            },
-            $addToSet: {
-              answers: qt.answer,
+            new: true,
+            upsert: true,
+          },
+        },
+        {
+          updateOne: {
+            filter: data,
+            update: {
+              $set: {
+                ulangan_id:
+                  typeof qt.ulangan_id === ObjectId
+                    ? qt.ulangan_id
+                    : new ObjectId(qt.ulangan_id),
+                user_id: new ObjectId(qt.user_id),
+              },
+              $inc: {
+                grade: qt.grade,
+              },
+              $addToSet: {
+                answers: qt.answer,
+              },
             },
           },
-          new: true,
-          upsert: true,
         },
-      },
-      {
-        updateOne: {
-          filter: data,
-          update: {
-            $set: {
-              "answers.$[element].answer": qt.answer.answer,
-            },
-          },
-          arrayFilters: [{ "element.question_id": qt.answer.question_id }],
-          new: true,
-          upsert: true,
-        },
-      },
-    ]);
-    return HistoryModel.find(data);
+      ]);
+      return true;
+    } catch (error) {
+      return error;
+    }
   };
   const getOrUpdate = async (qt) => {
     const data = {
@@ -103,5 +108,6 @@ export default function historyRepository() {
     add,
     getOrUpdate,
     update,
+    findByIdUser,
   };
 }

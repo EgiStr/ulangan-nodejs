@@ -21,13 +21,16 @@ export default class QuestionControllers {
     const user = req.user;
     const { question, answers } = req.body;
     const { id } = req.params;
+    console.log(question, answers, id);
 
     this.services.findByIdQuestion(id).then((result) => {
       if (result.length === 0) {
         const error = new Error("invalid Id");
         throw error;
       }
-      if (result[0].owner.toString() !== user.id) {
+  
+      if (result[0].owner._id.toString() !== user.id) {
+
         const error = new Error("You havent permission to Update");
         error.statusCode = 403;
         throw error;
@@ -35,7 +38,7 @@ export default class QuestionControllers {
       this.services
         .updateQuestion(id, question, answers)
         .then((result) => {
-          res.json(result);
+          res.json(result).status(200);
         })
         .catch((err) => next(err));
     });

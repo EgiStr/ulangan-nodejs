@@ -2,6 +2,7 @@ import UlanganModel from "../model/ulangan.js";
 import historyRepository from "./historyRepo.js";
 import mongoose from "mongoose";
 import errorStatus from "../../helpers/errorStatus.js";
+
 const ObjectId = mongoose.mongo.ObjectId;
 
 // move it to a proper place
@@ -15,26 +16,33 @@ export default function ulanganRepository() {
   const history = historyRepository();
 
   const findByProperty = (params) => {
-    // if params.s do search in UlanganModel
+
     if (params.q) {
       return UlanganModel.find(
         {
-          $or: [
-            { $text: { $search: params.q } },
-            { title: { $regex: params.q, $options: "i" } },
-            { topic: { $regex: params.q, $options: "i" } },
+          $and: [
+            {
+              $or: [
+                { $text: { $search: params.q } },
+                { title: { $regex: params.q, $options: "i" } },
+                { topic: { $regex: params.q, $options: "i" } },
+              ],
+            },
+            { isPrivate: false },
+            { draft: false },
           ],
         },
+
         { score: { $meta: "textScore" } }
       )
         .sort({ score: { $meta: "textScore" } })
-        .select("-question -__v -updateAt")
+        .select(" -__v -updateAt -question" )
         .populate("owner", "_id username ")
         .skip(params.perPage * params.page - params.perPage)
         .limit(params.perPage);
     } else {
       return UlanganModel.find(omit(params, "page", "perPage"))
-        .select("-updateAt -__v -updateAt")
+        .select("-updateAt -__v -question")
         .populate("owner", "_id username")
         .skip(params.perPage * params.page - params.perPage)
         .limit(params.perPage);
@@ -65,10 +73,9 @@ export default function ulanganRepository() {
       },
     ]);
   const findByIdQuestion = (id) =>
-    UlanganModel.find({ "question._id": new ObjectId(id) }).populate(
-      "owner",
-      "_id username"
-    ).select("-__v -updateAt -question");
+    UlanganModel.find({ "question._id": new ObjectId(id) })
+      .populate("owner", "_id username")
+      .select("-__v -updateAt -question");
 
   const findByTopic = (name, params) =>
     UlanganModel.find({

@@ -61,6 +61,7 @@ export default class UlanganSevices {
     if (!Array.isArray(topic)) {
       throw errorStatus("topic unvalid!", 400);
     }
+
     return await this.repository.updateById(id, {
       title,
       topic,
