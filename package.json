@@ -1,15 +1,13 @@
 {
   "name": "ulangan",
   "version": "1.0.0",
-  "description": "",
+  "description": "An api website for exam app ",
   "main": "app.js",
   "scripts": {
     "start": "node -r dotenv/config app.js && node app.js",
     "dev": "nodemon app.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.5",
@@ -26,6 +24,11 @@
   "devDependencies": {
     "faker": "^5.5.3",
     "nodemon": "^2.0.14"
+  },
+  "author": "EXSTR",
+  "license": "MIT",
+  "engines": {
+    "node": "16.11.0"
   },
   "type": "module"
 }

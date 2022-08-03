@@ -36,13 +36,13 @@ export default function ulanganRepository() {
         { score: { $meta: "textScore" } }
       )
         .sort({ score: { $meta: "textScore" } })
-        .select(" -__v -updateAt -question" )
+        .select("_id title" )
         .populate("owner", "_id username ")
         .skip(params.perPage * params.page - params.perPage)
         .limit(params.perPage);
     } else {
       return UlanganModel.find(omit(params, "page", "perPage"))
-        .select("-updateAt -__v -question")
+        .select("_id title")
         .populate("owner", "_id username")
         .skip(params.perPage * params.page - params.perPage)
         .limit(params.perPage);

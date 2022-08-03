@@ -23,7 +23,14 @@ export default function historyRepository() {
   const findByIdUser = (id) =>
     HistoryModel.find({
       user_id: id,
-    }).populate("ulangan", "_id title");
+    })
+      .populate({
+        path: "ulangan",
+        select: "_id title owner",
+        model: "Ulangan",
+        populate: { path: "owner", model: "User", select: "_id username" },
+      })
+      .select("-__v -updateAt");
 
   const add = (qt) => {
     const newHistory = new HistoryModel({
