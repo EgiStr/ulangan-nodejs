@@ -16,7 +16,6 @@ export default function ulanganRepository() {
   const history = historyRepository();
 
   const findByProperty = (params) => {
-
     if (params.q) {
       return UlanganModel.find(
         {
@@ -36,12 +35,14 @@ export default function ulanganRepository() {
         { score: { $meta: "textScore" } }
       )
         .sort({ score: { $meta: "textScore" } })
-        .select("_id title" )
+        .select("_id title")
         .populate("owner", "_id username ")
         .skip(params.perPage * params.page - params.perPage)
         .limit(params.perPage);
     } else {
-      return UlanganModel.find(omit(params, "page", "perPage"))
+      return UlanganModel.find({
+        $and: [{ isPrivate: false }, { draft: false }],
+      })
         .select("_id title")
         .populate("owner", "_id username")
         .skip(params.perPage * params.page - params.perPage)

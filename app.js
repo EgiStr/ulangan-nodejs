@@ -25,7 +25,7 @@ routesApp(app);
 app.use(errorHandlingMiddlware);
 
 server.listen(PORT, () => {
-  console.log(`Server running in http://127.0.0.1:${PORT}`);
+  console.log("Server Running.....")
 });
 
 // error costume error | 404 error

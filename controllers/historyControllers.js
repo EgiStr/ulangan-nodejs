@@ -1,7 +1,7 @@
 import HistorySevices from "../services/historyServices.js";
 
 export default class HistoryControllers {
-  constructor() {
+  isconstructor() {
     this.services = new HistorySevices();
   }
 
