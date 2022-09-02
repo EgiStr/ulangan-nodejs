@@ -36,7 +36,10 @@ export default class UlanganControllers {
         });
         const grade = answer ? 100 / data.total : 0;
         this.history
-          .updateHistory(data._id, user.id, grade, { answer:answers, question: question_id })
+          .updateHistory(data._id, user.id, grade, {
+            answer: answers,
+            question: question_id,
+          })
           .then((response) => {
             res.json(response);
           })
@@ -156,9 +159,11 @@ export default class UlanganControllers {
           error.statusCode = 403;
           throw error;
         }
-        if (result.question.length <= 0 && !draft) {
-          next(errorStatus("You can't Publish if there is no question", 400));
-          return;
+        if (draft !== undefined) {
+          if (result.question.length <= 0 && !draft) {
+            next(errorStatus("You can't Publish if there is no question", 400));
+            return;
+          }
         }
 
         this.services
