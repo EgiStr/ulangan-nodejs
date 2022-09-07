@@ -12,6 +12,8 @@ export default function ulanganRouter() {
   // realTime Pusher
   router.get("/:id", controllers.ulangan);
   router.get("/multi/:id", controllers.ulanganMulti);
+  router.post("/multi/:id/startEvent", controllers.ulanganStartEvent);
+  
 
   router.post("/", [authMiddleware], controllers.addUlangan);
   router.post("/placeanswer", [authMiddleware], controllers.placeAnswers);

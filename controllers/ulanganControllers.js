@@ -106,7 +106,12 @@ export default class UlanganControllers {
       res.json(response);
     });
   };
-
+  ulanganStartEvent = (req, res, next) => {
+    const isPlaying = req.body.isPlaying || true;
+    const channelName = `presence-multiplayer-${req.query.channel}`;
+    this.pusher.trigger(channelName, "UlanganStart", { isPlaying });
+    res.status(200);
+  };
   ulanganMulti = (req, res, next) => {
     const channelName = `presence-multiplayer-${req.query.channel}`;
     const question_time = req.query.time
