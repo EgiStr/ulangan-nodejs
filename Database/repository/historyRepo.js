@@ -22,7 +22,7 @@ export default function historyRepository() {
 
   const findByIdUser = (id) =>
     HistoryModel.find({
-      user_id: id,
+      user: id,
     })
       .populate({
         path: "ulangan",
