@@ -18,103 +18,27 @@ export default function historyRepository() {
   const countAll = (params) =>
     HistoryModel.countDocuments(omit(params, "page", "perPage"));
 
-  const findById = (id) => HistoryModel.findById(id).populate("ulangan");
+  const findById = (id) => HistoryModel.findById(id).populate("planner");
 
   const findByIdUser = (id) =>
-    HistoryModel.find({
-      user: id,
-    })
-      .populate({
-        path: "ulangan",
-        select: "_id title owner",
-        model: "Ulangan",
-        populate: { path: "owner", model: "User", select: "_id username" },
-      })
-      .select("-__v -updateAt");
+    HistoryModel.find({ user_id: id }).populate("planner").populate("user_id");
 
-  const add = (qt) => {
-    const newHistory = new HistoryModel({
-      user_id: qt.user_id,
-      ulangan_id: qt.ulangan_id,
-      grade: qt.grade,
+  const add = async (qt) => {
+    const newHistory = await HistoryModel.create({
+      user: qt.user,
+      planner: qt.planner,
     });
-    return newHistory.save();
+    return newHistory;
   };
 
-  const update = (qt) => {
-    try {
-      const data = {
-        user: new ObjectId(qt.user_id),
-        ulangan: new ObjectId(qt.ulangan_id),
-      };
-      HistoryModel.bulkWrite([
-        {
-          updateOne: {
-            filter: data,
-            update: {
-              $pull: { answers: { question: qt.answer.question } },
-            },
-            new: true,
-            upsert: true,
-          },
-        },
-        {
-          updateOne: {
-            filter: data,
-            update: {
-              $set: {
-                ulangan_id:
-                  typeof qt.ulangan_id === ObjectId
-                    ? qt.ulangan_id
-                    : new ObjectId(qt.ulangan_id),
-                user_id: new ObjectId(qt.user_id),
-              },
-              $inc: {
-                grade: qt.grade,
-              },
-              $addToSet: {
-                answers: qt.answer,
-              },
-            },
-          },
-        },
-      ]);
-      return true;
-    } catch (error) {
-      return error;
-    }
-  };
-  const getOrUpdate = async (qt) => {
-    const data = {
-      user: new ObjectId(qt.user_id),
-      ulangan: new ObjectId(qt.ulangan_id),
-    };
-    const history = await HistoryModel.findOneAndUpdate(
-      data, // find a document with that filter
-      {
-        $set: {
-          ulangan_id:
-            typeof qt.ulangan_id === ObjectId
-              ? qt.ulangan_id
-              : new ObjectId(qt.ulangan_id),
-          user_id: new ObjectId(qt.user_id),
-        },
-        $inc: {
-          grade: qt.grade,
-        },
-      }, // document to insert when nothing was found
-      { upsert: true, new: true, runValidators: true }
-    ); // options
-    return history;
-  };
+  const deleteById = async (id) => await HistoryModel.findByIdAndDelete(id);
 
   return {
     findByProperty,
     countAll,
     findById,
     add,
-    getOrUpdate,
-    update,
+    deleteById,
     findByIdUser,
   };
 }
