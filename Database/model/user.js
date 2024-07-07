@@ -28,7 +28,7 @@ const UserSchema = new Schema(
   },
   { timestamps: true }
 );
-
+UserSchema.index({ username: "text" });
 const UserModel = model("User", UserSchema);
 UserModel.createIndexes();
 export default UserModel;
